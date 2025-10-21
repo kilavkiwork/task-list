@@ -1,28 +1,54 @@
+import { useState } from "react";
 import "./App.css";
 
 function App() {
+  const [openSection, setOpenSection] = useState({
+    taskList: false,
+    task: true,
+    completedTask: true,
+  });
+
+  function toggleSection(section) {
+    setOpenSection((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }
+
   return (
     <div className="app">
       <div className="task-container">
         <h1>Task List with Priority</h1>
-        <button className="close-button">+</button>
-        <TaskForm />
+        <button
+          className={`close-button ${openSection.taskList ? "open" : ""}`}
+          onClick={() => toggleSection("taskList")}
+        >
+          +
+        </button>
+        {openSection.taskList && <TaskForm />}
       </div>
 
       <div className="task-container">
         <h2>Task</h2>
-        <button className="close-button">+</button>
+        <button className={`close-button ${openSection.task ? "open" : ""}`} onClick={() => toggleSection("task")}>
+          +
+        </button>
         <div className="sort-controls">
           <button className="sort-button">By Date</button>
           <button className="sort-button">By Priority</button>
         </div>
-        <TaskList />
+        {openSection.task && <TaskList />}
       </div>
 
       <div className="completed-task-container">
         <h2>Completed Tasks</h2>
-        <button className="close-button">+</button>
-        <CompletedTaskList />
+        <button
+          className={`close-button ${openSection.completedTask ? "open" : ""}`}
+          onClick={() => toggleSection("completedTask")}
+        >
+          +
+        </button>
+        {openSection.completedTask && <CompletedTaskList />}
       </div>
       <Footer />
     </div>
@@ -81,8 +107,8 @@ function Footer() {
   return (
     <footer className="footer">
       <p>
-        Technologies and React concept: React, JSX, props, useState, component composition, conditional rendering, array
-        methods (map, filter), event handling.
+        <strong>Technologies and React concept:</strong> React, JSX, props, useState, component composition, conditional
+        rendering, array methods (map, filter), event handling.
       </p>
     </footer>
   );
