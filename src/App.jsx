@@ -8,12 +8,20 @@ function App() {
     completedTask: true,
   });
 
+  const [tasks, setTasks] = useState([]);
+
   function toggleSection(section) {
     setOpenSection((prev) => ({
       ...prev,
       [section]: !prev[section],
     }));
   }
+
+  function addTask(task) {
+    setTasks([...tasks, { ...task, completed: false, id: Date.now() }]);
+  }
+
+  console.log(tasks);
 
   return (
     <div className="app">
@@ -25,7 +33,7 @@ function App() {
         >
           +
         </button>
-        {openSection.taskList && <TaskForm />}
+        {openSection.taskList && <TaskForm addTask={addTask} />}
       </div>
 
       <div className="task-container">
@@ -55,16 +63,52 @@ function App() {
   );
 }
 
-function TaskForm() {
+function TaskForm({ addTask }) {
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState("Low");
+  const [deadline, setDeadline] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (title.trim() && deadline) {
+      addTask({ title, priority, deadline });
+      setTitle("");
+      setPriority("Low");
+      setDeadline("");
+    }
+  }
+
   return (
-    <form action="" className="task-form">
-      <input type="text" value={""} placeholder="task title" required />
-      <select value={""}>
+    <form action="" className="task-form" onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={title}
+        placeholder="task title"
+        required
+        onChange={(e) => {
+          setTitle(e.target.value);
+        }}
+      />
+      <select
+        value={priority}
+        onChange={(e) => {
+          setPriority(e.target.value);
+        }}
+      >
         <option value="Hight">Hight</option>
         <option value="Medium">Medium</option>
         <option value="Low">Low</option>
       </select>
-      <input type="datetime-local" value={""} required />
+      <input
+        type="datetime-local"
+        value={deadline}
+        required
+        onChange={(e) => {
+          console.log(e.target.value);
+
+          setDeadline(e.target.value);
+        }}
+      />
       <button type="submit">Add task</button>
     </form>
   );
