@@ -7,8 +7,9 @@ function App() {
     task: true,
     completedTask: true,
   });
-
   const [tasks, setTasks] = useState([]);
+  const [sortType, setSortType] = useState("date");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   function toggleSection(section) {
     setOpenSection((prev) => ({
@@ -21,7 +22,44 @@ function App() {
     setTasks([...tasks, { ...task, completed: false, id: Date.now() }]);
   }
 
-  console.log(tasks);
+  function deleteTask(id) {
+    setTasks(tasks.filter((task) => task.id !== id));
+  }
+
+  function completeTask(id) {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, completed: true } : task
+      )
+    );
+  }
+
+  function sortTask(tasks) {
+    return tasks.slice().sort((a, b) => {
+      if (sortType === "priority") {
+        const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+        return sortOrder == "asc"
+          ? priorityOrder[a.priority] - priorityOrder[b.priority]
+          : priorityOrder[b.priority] - priorityOrder[a.priority];
+      } else {
+        return sortOrder === "asc"
+          ? new Date(a.deadline) - new Date(b.deadline)
+          : new Date(b.deadline) - new Date(a.deadline);
+      }
+    });
+  }
+
+  function toggleSortOrder(type) {
+    if (sortType === type) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortType(type);
+      setSortOrder("asc");
+    }
+  }
+
+  const activeTasks = sortTask(tasks.filter((task) => !task.completed));
+  const completedTasks = tasks.filter((task) => task.completed);
 
   return (
     <div className="app">
@@ -38,14 +76,36 @@ function App() {
 
       <div className="task-container">
         <h2>Task</h2>
-        <button className={`close-button ${openSection.task ? "open" : ""}`} onClick={() => toggleSection("task")}>
+        <button
+          className={`close-button ${openSection.task ? "open" : ""}`}
+          onClick={() => toggleSection("task")}
+        >
           +
         </button>
         <div className="sort-controls">
-          <button className="sort-button">By Date</button>
-          <button className="sort-button">By Priority</button>
+          <button
+            className={`sort-button ${sortType === "date" ? "active" : ""}`}
+            onClick={() => toggleSortOrder("date")}
+          >
+            By Date{" "}
+            {sortType === "date" && (sortOrder === "asc" ? "\u2191" : "\u2193")}
+          </button>
+          <button
+            className={`sort-button ${sortType === "priority" ? "active" : ""}`}
+            onClick={() => toggleSortOrder("priority")}
+          >
+            By Priority{" "}
+            {sortType === "priority" &&
+              (sortOrder === "asc" ? "\u2191" : "\u2193")}
+          </button>
         </div>
-        {openSection.task && <TaskList />}
+        {openSection.task && (
+          <TaskList
+            completeTask={completeTask}
+            deleteTask={deleteTask}
+            activeTasks={activeTasks}
+          />
+        )}
       </div>
 
       <div className="completed-task-container">
@@ -56,7 +116,12 @@ function App() {
         >
           +
         </button>
-        {openSection.completedTask && <CompletedTaskList />}
+        {openSection.completedTask && (
+          <CompletedTaskList
+            completedTasks={completedTasks}
+            deleteTask={deleteTask}
+          />
+        )}
       </div>
       <Footer />
     </div>
@@ -95,7 +160,7 @@ function TaskForm({ addTask }) {
           setPriority(e.target.value);
         }}
       >
-        <option value="Hight">Hight</option>
+        <option value="High">High</option>
         <option value="Medium">Medium</option>
         <option value="Low">Low</option>
       </select>
@@ -114,34 +179,52 @@ function TaskForm({ addTask }) {
   );
 }
 
-function TaskList() {
+function TaskList({ activeTasks, deleteTask, completeTask }) {
   return (
     <ul className="task-list">
-      <TaskItem />
+      {activeTasks.map((task) => (
+        <TaskItem
+          task={task}
+          key={task.id}
+          deleteTask={deleteTask}
+          completeTask={completeTask}
+        />
+      ))}
     </ul>
   );
 }
 
-function CompletedTaskList() {
+function CompletedTaskList({ completedTasks, deleteTask }) {
   return (
     <ul className="completed-task-list">
-      <TaskItem />
+      {completedTasks.map((task) => (
+        <TaskItem key={task.id} task={task} deleteTask={deleteTask} />
+      ))}
     </ul>
   );
 }
 
-function TaskItem() {
+function TaskItem({ task, deleteTask, completeTask }) {
+  const { title, priority, deadline, id, completed } = task;
   return (
-    <li className="task-item">
+    <li className={`task-item ${priority.toLowerCase()}`}>
       <div className="task-info">
         <div>
-          Title <strong>Medium</strong>
+          {title} <strong>{priority}</strong>
         </div>
-        <div className="task-deadline">Due: {new Date().toLocaleString()}</div>
+        <div className="task-deadline">
+          Due: {new Date(deadline).toLocaleString()}
+        </div>
       </div>
       <div className="task-buttons">
-        <button className="complete-button">Complete</button>
-        <button className="delete-button">Delete</button>
+        {!completed && (
+          <button className="complete-button" onClick={() => completeTask(id)}>
+            Complete
+          </button>
+        )}
+        <button className="delete-button" onClick={() => deleteTask(id)}>
+          Delete
+        </button>
       </div>
     </li>
   );
@@ -151,8 +234,9 @@ function Footer() {
   return (
     <footer className="footer">
       <p>
-        <strong>Technologies and React concept:</strong> React, JSX, props, useState, component composition, conditional
-        rendering, array methods (map, filter), event handling.
+        <strong>Technologies and React concept:</strong> React, JSX, props,
+        useState, component composition, conditional rendering, array methods
+        (map, filter), event handling.
       </p>
     </footer>
   );
