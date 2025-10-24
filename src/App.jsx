@@ -59,7 +59,7 @@ function App() {
   }
 
   const activeTasks = sortTask(tasks.filter((task) => !task.completed));
-  const completedTasks = tasks.filter((task) => task.completed);
+  const completedTasks = sortTask(tasks.filter((task) => task.completed));
 
   return (
     <div className="app">
