@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
@@ -10,6 +10,15 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [sortType, setSortType] = useState("date");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [currentTimer, setCurrentTimer] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTimer(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   function toggleSection(section) {
     setOpenSection((prev) => ({
@@ -104,6 +113,7 @@ function App() {
             completeTask={completeTask}
             deleteTask={deleteTask}
             activeTasks={activeTasks}
+            currentTimer={currentTimer}
           />
         )}
       </div>
@@ -179,7 +189,7 @@ function TaskForm({ addTask }) {
   );
 }
 
-function TaskList({ activeTasks, deleteTask, completeTask }) {
+function TaskList({ activeTasks, deleteTask, completeTask, currentTimer }) {
   return (
     <ul className="task-list">
       {activeTasks.map((task) => (
@@ -188,6 +198,7 @@ function TaskList({ activeTasks, deleteTask, completeTask }) {
           key={task.id}
           deleteTask={deleteTask}
           completeTask={completeTask}
+          isOverdue={new Date(task.deadline) < currentTimer}
         />
       ))}
     </ul>
@@ -204,10 +215,14 @@ function CompletedTaskList({ completedTasks, deleteTask }) {
   );
 }
 
-function TaskItem({ task, deleteTask, completeTask }) {
+function TaskItem({ task, deleteTask, completeTask, isOverdue }) {
   const { title, priority, deadline, id, completed } = task;
   return (
-    <li className={`task-item ${priority.toLowerCase()}`}>
+    <li
+      className={`task-item ${priority.toLowerCase()} ${
+        isOverdue ? "overdue" : ""
+      }`}
+    >
       <div className="task-info">
         <div>
           {title} <strong>{priority}</strong>
